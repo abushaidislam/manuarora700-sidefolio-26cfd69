@@ -1,0 +1,339 @@
+import { BlogLayout } from "@/components/BlogLayout";
+
+import { CodeWindow } from "@/components/CodeWindow";
+
+export const meta = {
+  date: "2023-08-18",
+  title: "Writing Clean Code With React",
+  description:
+    "Effective and efficient ways to write clean code with React while keeping in mind the performance and maintainability of the codebase.",
+  image:
+    "https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  tags: ["Clean Code"],
+};
+
+export default (props) => <BlogLayout meta={meta} {...props} />;
+
+Velit cillum fugiat proident pariatur anim proident laborum incididunt magna in labore adipisicing veniam quis. Ut et exercitation dolor in enim quis. Et est excepteur exercitation voluptate in qui duis nulla in anim ut commodo deserunt nisi. Dolor pariatur irure occaecat Lorem mollit veniam adipisicing.
+
+Deserunt qui ea do et laborum ad id. Tempor laborum aute fugiat tempor eu. Amet sint sint proident pariatur eiusmod mollit excepteur excepteur. Dolore cillum nulla enim tempor ad.
+
+Laborum quis proident ut anim consectetur. Consequat fugiat eiusmod qui officia duis eu minim cillum do qui. Sunt sit veniam minim ad id sunt magna est enim.
+
+Consectetur est sunt minim culpa quis aute officia incididunt ea laboris nulla officia dolor. Cupidatat cupidatat esse veniam cillum labore ullamco aliqua ex. Cillum incididunt ipsum laborum dolor enim incididunt consectetur id consectetur magna. Consequat mollit non ea cupidatat exercitation. Consequat reprehenderit eiusmod nisi ea esse id ut est consequat eu aliqua do quis.
+
+Occaecat commodo velit ea consectetur ut sit. Duis eiusmod ad tempor nisi magna dolore incididunt ea dolore. Commodo proident eiusmod consequat cupidatat consectetur adipisicing dolor commodo tempor labore non dolore Lorem consectetur.
+
+## Introduction to Clean Code Principles
+
+Clean code is essential for maintaining scalable and maintainable applications. When working with React, following established patterns and best practices can significantly improve your codebase's quality. In this comprehensive guide, we'll explore proven techniques for writing clean, efficient React code.
+
+### Why Clean Code Matters
+
+Writing clean code isn't just about aesthetics—it's about creating software that is:
+- **Maintainable**: Easy to update and modify over time
+- **Readable**: Understandable by other developers (and your future self)
+- **Testable**: Simple to write unit and integration tests for
+- **Performant**: Optimized for runtime efficiency
+- **Scalable**: Able to grow with your application's needs
+
+### Key Principles for React Development
+
+1. **Single Responsibility Principle**: Each component should do one thing well
+2. **DRY (Don't Repeat Yourself)**: Avoid duplicating logic across components
+3. **KISS (Keep It Simple, Stupid)**: Prefer simple solutions over complex ones
+4. **Composition over Inheritance**: Build components from smaller, reusable pieces
+
+## Component Structure Best Practices
+
+### Organizing Your Component Files
+
+A well-structured React application follows consistent patterns. Here's a recommended folder structure:
+
+```
+src/
+├── components/
+│   ├── ui/           # Reusable UI components (Button, Input, Card)
+│   ├── layout/       # Layout components (Header, Footer, Sidebar)
+│   └── features/     # Feature-specific components
+├── hooks/            # Custom React hooks
+├── utils/            # Utility functions
+├── types/            # TypeScript type definitions
+└── services/         # API and external service integrations
+```
+
+### Naming Conventions
+
+Consistent naming makes your codebase more navigable:
+- **Components**: PascalCase (e.g., `UserProfile.tsx`)
+- **Hooks**: camelCase starting with "use" (e.g., `useAuth.ts`)
+- **Utilities**: camelCase (e.g., `formatDate.ts`)
+- **Constants**: UPPER_SNAKE_CASE or camelCase (e.g., `API_ENDPOINTS.ts`)
+
+## State Management Patterns
+
+### Local vs. Global State
+
+Understanding when to use different state management solutions is crucial:
+
+**Use Local State (useState) when:**
+- Data is only needed within a single component
+- The state is UI-specific (modals, form inputs, toggles)
+- No other components need to access the data
+
+**Use Global State (Context/Redux/Zustand) when:**
+- Multiple components need access to the same data
+- State changes need to be synchronized across the app
+- The data represents application-wide concerns (user auth, theme, preferences)
+
+### Custom Hooks for Reusable Logic
+
+Extracting logic into custom hooks promotes reusability:
+
+<CodeWindow title="useLocalStorage.ts">
+
+```TS
+import { useState, useEffect } from "react";
+
+export function useLocalStorage<T>(key: string, initialValue: T) {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error(error);
+      return initialValue;
+    }
+  });
+
+  const setValue = (value: T | ((val: T) => T)) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return [storedValue, setValue] as const;
+}
+```
+
+</CodeWindow>
+
+## Performance Optimization Techniques
+
+### Memoization Strategies
+
+React provides several tools for optimizing performance:
+
+1. **React.memo**: Prevents unnecessary re-renders of functional components
+2. **useMemo**: Caches expensive calculations
+3. **useCallback**: Memoizes function references for child components
+
+### Code Splitting and Lazy Loading
+
+Implement code splitting to reduce initial bundle size:
+
+```tsx
+import { lazy, Suspense } from "react";
+
+const HeavyComponent = lazy(() => import("./HeavyComponent"));
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HeavyComponent />
+    </Suspense>
+  );
+}
+```
+
+## Error Handling and Edge Cases
+
+### Error Boundaries
+
+Implement error boundaries to gracefully handle runtime errors:
+
+```tsx
+import { Component, ErrorInfo, ReactNode } from "react";
+
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  public state: State = { hasError: false };
+
+  public static getDerivedStateFromError(_: Error): State {
+    return { hasError: true };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return this.props.fallback || <h1>Sorry.. there was an error</h1>;
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+### Loading and Empty States
+
+Always consider loading, error, and empty states in your UI design. This provides a better user experience and prevents confusing blank screens.
+
+## Testing Clean Code
+
+### Unit Testing Components
+
+Write tests that verify your components behave correctly:
+
+```tsx
+import { render, screen, fireEvent } from "@testing-library/react";
+import { Counter } from "./Counter";
+
+describe("Counter", () => {
+  it("renders initial count", () => {
+    render(<Counter initialCount={0} />);
+    expect(screen.getByText("Count: 0")).toBeInTheDocument();
+  });
+
+  it("increments count when button is clicked", () => {
+    render(<Counter initialCount={0} />);
+    fireEvent.click(screen.getByText("Increment"));
+    expect(screen.getByText("Count: 1")).toBeInTheDocument();
+  });
+});
+```
+
+### Integration Testing
+
+Test how components work together to ensure your application's logic flows correctly across multiple components and state updates.
+
+## Advanced Patterns and Best Practices
+
+### Component Composition
+
+Composition is a powerful pattern in React that allows you to build complex UIs from simple, reusable pieces. Instead of creating monolithic components with many props, break them down into smaller, focused components.
+
+```tsx
+// Instead of this:
+<Card title="User Profile" showAvatar={true} showActions={true} />
+
+// Prefer this:
+<Card>
+  <CardHeader>
+    <Avatar src={user.avatar} />
+    <CardTitle>{user.name}</CardTitle>
+  </CardHeader>
+  <CardActions>
+    <Button>Edit</Button>
+    <Button>Delete</Button>
+  </CardActions>
+</Card>
+```
+
+### TypeScript Best Practices
+
+Using TypeScript effectively can catch errors at compile time and improve code quality:
+
+- Define explicit types for component props
+- Use union types for variants and states
+- Leverage generics for reusable components
+- Avoid using `any` type
+- Create type definitions for API responses
+
+## Conclusion
+
+Writing clean code in React requires discipline and practice. By following these principles—maintaining clear component structures, managing state effectively, optimizing performance, and handling errors gracefully—you'll create applications that are easier to maintain and scale.
+
+Remember that clean code is a continuous journey, not a destination. Regularly refactor your code, stay updated with React best practices, and always keep the next developer (who might be you) in mind when writing code.
+
+## Code Snippet
+
+<CodeWindow title="BoxesContainer.tsx">
+
+```TSX
+import React from "react";
+import { motion } from "framer-motion";
+
+export const BoxesContainer = () => {
+  const rows = new Array(150).fill(1);
+  const cols = new Array(100).fill(1);
+  let colors = [
+    "--sky-300",
+    "--pink-300",
+    "--green-300",
+    "--yellow-300",
+    "--red-300",
+    "--purple-300",
+    "--blue-300",
+    "--indigo-300",
+    "--violet-300",
+  ];
+  const getRandomColor = () => {
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
+  return (
+    <div
+      style={{
+        transform: `translate(-40%,-60%) skewX(-48deg) skewY(14deg) scale(0.675) rotate(0deg) translateZ(0)`,
+      }}
+      className="absolute left-1/4 p-4 -top-1/4 flex  -translate-x-1/2 -translate-y-1/2 w-full h-full z-0 "
+    >
+      {rows.map((_, i) => (
+        <motion.div
+          key={`row` + i}
+          className="w-16 h-8  border-l  border-slate-700 relative"
+        >
+          {cols.map((_, j) => (
+            <motion.div
+              whileHover={{
+                backgroundColor: `var(${getRandomColor()})`,
+                transition: { duration: 0 },
+              }}
+              animate={{
+                transition: { duration: 2 },
+              }}
+              key={`col` + j}
+              className="w-16 h-8  border-r border-t border-slate-700 relative"
+            >
+              {j % 2 === 0 && i % 2 === 0 ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="absolute h-6 w-10 -top-[14px] -left-[22px] text-slate-700 stroke-[1px] pointer-events-none"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 6v12m6-6H6"
+                  />
+                </svg>
+              ) : null}
+            </motion.div>
+          ))}
+        </motion.div>
+      ))}
+    </div>
+  );
+};
+
+```
+
+</CodeWindow>
